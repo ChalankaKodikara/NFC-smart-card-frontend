@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import CustomSection, { CustomSectionType } from "./CustomSection";
 import { apiRequest } from "@/utils/api";
 
@@ -10,32 +10,35 @@ type Props = {
 
 export default function CustomSectionsPanel({ clientId }: Props) {
   const [sections, setSections] = useState<CustomSectionType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
+  /* ================= FETCH SECTIONS ================= */
+  const fetchSections = useCallback(async (): Promise<void> => {
     if (!clientId) return;
-    fetchSections();
-  }, [clientId]);
 
-  const fetchSections = async () => {
     try {
       setLoading(true);
 
       const res = await apiRequest(`/api/client/custom/${clientId}`);
-
-      const json = await res.json();
+      const json: { success: boolean; data?: CustomSectionType[] } =
+        await res.json();
 
       if (json.success) {
-        setSections(json.data || []);
+        setSections(json.data ?? []);
       }
-    } catch (err) {
-      console.error("Load error:", err);
+    } catch (error: unknown) {
+      console.error("Load error:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [clientId]);
 
-  const addNewSection = () => {
+  useEffect(() => {
+    fetchSections();
+  }, [fetchSections]);
+
+  /* ================= ADD NEW SECTION ================= */
+  const addNewSection = (): void => {
     const newSection: CustomSectionType = {
       id: String(Date.now()),
       title: "",
@@ -44,29 +47,41 @@ export default function CustomSectionsPanel({ clientId }: Props) {
       images: [],
     };
 
-    // Add instantly in UI (user must click Save)
-    setSections((prev) => [newSection, ...prev]);
+    // Instantly add in UI (user must click Save inside section)
+    setSections((prev: CustomSectionType[]) => [
+      newSection,
+      ...prev,
+    ]);
   };
 
-  if (loading)
-    return <div className="text-black">Loading custom sections...</div>;
+  /* ================= LOADING STATE ================= */
+  if (loading) {
+    return (
+      <div className="text-black">
+        Loading custom sections...
+      </div>
+    );
+  }
 
+  /* ================= RENDER ================= */
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
         <button
           onClick={addNewSection}
-          className="bg-black text-white px-4 py-2 rounded-lg"
+          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
         >
           + Add Section
         </button>
       </div>
 
       {sections.length === 0 && (
-        <div className="text-black">No custom sections yet.</div>
+        <div className="text-black">
+          No custom sections yet.
+        </div>
       )}
 
-      {sections.map((sec) => (
+      {sections.map((sec: CustomSectionType) => (
         <CustomSection
           key={sec.id}
           clientId={clientId}
