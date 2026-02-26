@@ -12,7 +12,7 @@ type PersonalData = {
 };
 
 export default function PersonalSection({ clientId }: { clientId: string }) {
-  const API = process.env.NEXT_PUBLIC_API_URL;
+  const API = process.env.NEXT_PUBLIC_API_URL as string;
 
   const [data, setData] = useState<PersonalData>({
     name: "",
@@ -23,14 +23,23 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  /* ===========================
-     FETCH PROFILE
-  ============================ */
+  /* ================= OPTIMIZE CLOUDINARY IMAGE ================= */
+  const optimizeImage = (url?: string) => {
+    if (!url) return "/avatar-placeholder.png";
+
+    return url.replace(
+      "/upload/",
+      "/upload/w_500,h_500,c_fill,q_auto,f_auto/"
+    );
+  };
+
+  /* ================= FETCH PROFILE ================= */
   useEffect(() => {
+    if (!clientId) return;
+
     const fetchProfile = async () => {
       try {
         const res = await fetch(`${API}/api/client/personal/${clientId}`);
@@ -51,9 +60,7 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
     fetchProfile();
   }, [clientId]);
 
-  /* ===========================
-     IMAGE PREVIEW
-  ============================ */
+  /* ================= IMAGE PREVIEW ================= */
   const handleImageChange = (file: File) => {
     setSelectedFile(file);
 
@@ -64,9 +71,7 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
     reader.readAsDataURL(file);
   };
 
-  /* ===========================
-     SAVE PROFILE (TEXT + IMAGE)
-  ============================ */
+  /* ================= SAVE PROFILE ================= */
   const handleSave = async () => {
     setSaving(true);
 
@@ -111,7 +116,7 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
 
   if (loading) {
     return (
-      <div className="p-8 bg-white rounded-xl shadow text-center">
+      <div className="p-8 bg-white rounded-xl shadow text-center text-black">
         Loading profile...
       </div>
     );
@@ -121,15 +126,17 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
     <div className="p-8 border rounded-2xl bg-white space-y-6 shadow-lg max-w-3xl">
       <h2 className="text-2xl font-semibold text-black">Personal Profile</h2>
 
-      {/* IMAGE PREVIEW */}
+      {/* ================= IMAGE PREVIEW ================= */}
       <div className="flex items-center gap-6">
-        {(preview || data.profileImage) && (
-          <img
-            src={preview ? preview : `${API}${data.profileImage}`}
-            alt="Profile"
-            className="w-40 h-40 object-cover rounded-xl border"
-          />
-        )}
+        <img
+          src={
+            preview
+              ? preview
+              : optimizeImage(data.profileImage)
+          }
+          alt="Profile"
+          className="w-40 h-40 object-cover rounded-2xl border shadow-md"
+        />
 
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">
@@ -149,7 +156,7 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      {/* NAME */}
+      {/* ================= NAME ================= */}
       <div>
         <label className="block text-sm font-medium text-gray-600 mb-2">
           Name
@@ -161,7 +168,7 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
         />
       </div>
 
-      {/* SLOGAN */}
+      {/* ================= SLOGAN ================= */}
       <div>
         <label className="block text-sm font-medium text-gray-600 mb-2">
           Slogan
@@ -173,7 +180,7 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
         />
       </div>
 
-      {/* BIO */}
+      {/* ================= BIO ================= */}
       <div>
         <label className="block text-sm font-medium text-gray-600 mb-2">
           Bio
@@ -185,7 +192,7 @@ export default function PersonalSection({ clientId }: { clientId: string }) {
         />
       </div>
 
-      {/* SAVE BUTTON */}
+      {/* ================= SAVE BUTTON ================= */}
       <div className="pt-4">
         <button
           onClick={handleSave}

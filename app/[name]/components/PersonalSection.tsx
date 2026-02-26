@@ -31,6 +31,15 @@ export default function PersonalSection({
 }: PersonalProps) {
   const firstName = name?.split(" ")[0] || "";
 
+  /* ================= CLOUDINARY OPTIMIZER ================= */
+  const optimizeImage = (url?: string) => {
+    if (!url) return "/placeholder.jpg";
+
+    return url.replace("/upload/", "/upload/w_700,h_700,c_fill,q_auto,f_auto/");
+  };
+
+  const optimizedImage = optimizeImage(profileImage);
+
   /* ================= ICON MATCHER ================= */
   const getIcon = (platform: string) => {
     const p = platform?.toLowerCase().trim();
@@ -46,11 +55,10 @@ export default function PersonalSection({
   };
 
   return (
-    <section className="pt-12 pb-20 px-6 md:px-12">
+    <section className="pt-16 pb-24 px-6 md:px-12">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-        {/* ================= LEFT SIDE ================= */}
+        {/* LEFT SIDE */}
         <div className="space-y-8">
-          {/* Header */}
           <div className="flex items-center gap-4 text-gray-600">
             <span className="w-3 h-3 rounded-full bg-black" />
             <span className="font-medium text-lg">{name}</span>
@@ -61,31 +69,25 @@ export default function PersonalSection({
             </div>
           </div>
 
-          {/* Profile Small Card */}
+          {/* Small Profile Card */}
           <div className="flex items-center gap-4">
-            {profileImage && (
-              <img
-                src={profileImage}
-                alt={name}
-                className="w-[70px] h-[70px] rounded-full object-cover shadow-md"
-              />
-            )}
-
+            <img
+              src={optimizedImage}
+              alt={name}
+              className="w-[75px] h-[75px] rounded-full object-cover shadow-lg"
+            />
             <div>
               <h2 className="text-lg font-semibold text-black">{name}</h2>
-              <p className="text-gray-500 font-light text-sm">{slogan}</p>
+              <p className="text-gray-500 text-sm">{slogan}</p>
             </div>
           </div>
 
-          {/* Main Heading */}
-          <h1 className="text-4xl md:text-5xl font-semibold leading-tight text-gray-900">
+          <h1 className="text-4xl md:text-5xl font-semibold text-gray-900">
             Hi, I'm {firstName}
           </h1>
 
-          {/* Bio */}
           <p className="text-gray-600 leading-relaxed max-w-xl">{bio}</p>
 
-          {/* Social Icons */}
           {socialLinks.length > 0 && (
             <div className="flex gap-4 pt-6">
               {socialLinks.map((item, index) => {
@@ -108,16 +110,14 @@ export default function PersonalSection({
           )}
         </div>
 
-        {/* ================= RIGHT SIDE IMAGE ================= */}
-        {profileImage && (
-          <div className="rounded-[32px] overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.15)]">
-            <img
-              src={profileImage}
-              alt={name}
-              className="w-full h-[450px] md:h-[600px] object-cover"
-            />
-          </div>
-        )}
+        {/* RIGHT SIDE IMAGE */}
+        <div className="rounded-[32px] overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.15)]">
+          <img
+            src={optimizedImage}
+            alt={name}
+            className="w-full h-[450px] md:h-[600px] object-cover"
+          />
+        </div>
       </div>
     </section>
   );

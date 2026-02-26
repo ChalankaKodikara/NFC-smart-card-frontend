@@ -25,20 +25,25 @@ const API = process.env.NEXT_PUBLIC_API_URL as string;
 export default function ExperienceSection({ clientId }: Props) {
   const [items, setItems] = useState<Experience[]>([]);
   const [originalItems, setOriginalItems] = useState<Experience[]>([]);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [editMode, setEditMode] = useState<boolean>(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
+
+  /* ================= OPTIMIZE CLOUDINARY IMAGE ================= */
+  const optimizeImage = (url?: string) => {
+    if (!url) return "";
+    return url.replace("/upload/", "/upload/w_250,h_250,c_fill,q_auto,f_auto/");
+  };
 
   /* ================= FETCH ================= */
-
   useEffect(() => {
     if (!clientId) return;
     fetchData();
   }, [clientId]);
 
-  const fetchData = async (): Promise<void> => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError("");
@@ -60,8 +65,7 @@ export default function ExperienceSection({ clientId }: Props) {
   };
 
   /* ================= CRUD ================= */
-
-  const handleAdd = (): void => {
+  const handleAdd = () => {
     setItems((prev) => [
       ...prev,
       {
@@ -76,11 +80,7 @@ export default function ExperienceSection({ clientId }: Props) {
     ]);
   };
 
-  const handleChange = <K extends keyof Experience>(
-    index: number,
-    field: K,
-    value: Experience[K],
-  ): void => {
+  const handleChange = (index: number, field: keyof Experience, value: any) => {
     setItems((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
@@ -93,20 +93,17 @@ export default function ExperienceSection({ clientId }: Props) {
     });
   };
 
-  const handleRemove = (index: number): void => {
+  const handleRemove = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   /* ================= LOGO UPLOAD ================= */
-
-  const handleLogoUpload = async (
-    index: number,
-    file: File | null,
-  ): Promise<void> => {
+  const handleLogoUpload = async (index: number, file: File | null) => {
     if (!file || !clientId) return;
 
     const previewUrl = URL.createObjectURL(file);
 
+    // Show preview immediately
     setItems((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], logo: previewUrl };
@@ -134,15 +131,14 @@ export default function ExperienceSection({ clientId }: Props) {
 
       const json = await res.json();
 
-      if (!json.success) {
-        throw new Error("Upload failed");
-      }
+      if (!json.success) throw new Error("Upload failed");
 
+      // Replace preview with Cloudinary URL
       setItems((prev) => {
         const updated = [...prev];
         updated[index] = {
           ...updated[index],
-          logo: `${API}${json.url}?t=${Date.now()}`,
+          logo: json.url,
         };
         return updated;
       });
@@ -160,8 +156,7 @@ export default function ExperienceSection({ clientId }: Props) {
   };
 
   /* ================= SAVE ================= */
-
-  const handleSave = async (): Promise<void> => {
+  const handleSave = async () => {
     if (!clientId) return;
 
     try {
@@ -169,7 +164,7 @@ export default function ExperienceSection({ clientId }: Props) {
       setError("");
 
       const filtered = items.filter(
-        (exp) => exp.position.trim() !== "" && exp.company.trim() !== "",
+        (exp) => exp.position.trim() && exp.company.trim(),
       );
 
       const res = await apiRequest(
@@ -183,9 +178,7 @@ export default function ExperienceSection({ clientId }: Props) {
 
       const json = await res.json();
 
-      if (!json.success) {
-        throw new Error("Save failed");
-      }
+      if (!json.success) throw new Error();
 
       setItems(json.data);
       setOriginalItems(json.data);
@@ -197,13 +190,12 @@ export default function ExperienceSection({ clientId }: Props) {
     }
   };
 
-  const handleCancel = (): void => {
+  const handleCancel = () => {
     setItems(originalItems);
     setEditMode(false);
   };
 
   /* ================= UI ================= */
-
   if (loading) {
     return (
       <div className="p-6 bg-white rounded-xl shadow text-black">
@@ -225,7 +217,6 @@ export default function ExperienceSection({ clientId }: Props) {
             >
               Cancel
             </button>
-
             <button
               onClick={handleSave}
               disabled={saving}
@@ -253,7 +244,7 @@ export default function ExperienceSection({ clientId }: Props) {
             key={index}
             className="border border-black rounded-2xl p-5 bg-white space-y-4"
           >
-            {/* Logo */}
+            {/* LOGO */}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-xl border border-black overflow-hidden relative">
                 {uploadingIndex === index && (
@@ -264,7 +255,7 @@ export default function ExperienceSection({ clientId }: Props) {
 
                 {exp.logo ? (
                   <img
-                    src={exp.logo}
+                    src={optimizeImage(exp.logo)}
                     alt="Company Logo"
                     className="w-full h-full object-cover"
                   />
@@ -280,7 +271,7 @@ export default function ExperienceSection({ clientId }: Props) {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onChange={(e) =>
                       handleLogoUpload(index, e.target.files?.[0] || null)
                     }
                     className="text-black"
@@ -296,71 +287,29 @@ export default function ExperienceSection({ clientId }: Props) {
               )}
             </div>
 
-            {/* Position */}
+            {/* POSITION */}
             <input
               disabled={!editMode}
               value={exp.position}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange(index, "position", e.target.value)
-              }
+              onChange={(e) => handleChange(index, "position", e.target.value)}
               placeholder="Position"
               className="w-full border border-black px-3 py-2 rounded-lg text-black"
             />
 
-            {/* Company */}
+            {/* COMPANY */}
             <input
               disabled={!editMode}
               value={exp.company}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange(index, "company", e.target.value)
-              }
+              onChange={(e) => handleChange(index, "company", e.target.value)}
               placeholder="Company Name"
               className="w-full border border-black px-3 py-2 rounded-lg text-black"
             />
 
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="month"
-                disabled={!editMode}
-                value={exp.startDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleChange(index, "startDate", e.target.value)
-                }
-                className="border border-black px-3 py-2 rounded-lg text-black"
-              />
-
-              {!exp.isCurrent && (
-                <input
-                  type="month"
-                  disabled={!editMode}
-                  value={exp.endDate}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    handleChange(index, "endDate", e.target.value)
-                  }
-                  className="border border-black px-3 py-2 rounded-lg text-black"
-                />
-              )}
-            </div>
-
-            {/* Checkbox */}
-            <label className="flex items-center gap-2 text-black">
-              <input
-                type="checkbox"
-                disabled={!editMode}
-                checked={exp.isCurrent}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleChange(index, "isCurrent", e.target.checked)
-                }
-              />
-              Currently working here
-            </label>
-
-            {/* Description */}
+            {/* DESCRIPTION */}
             <textarea
               disabled={!editMode}
               value={exp.description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+              onChange={(e) =>
                 handleChange(index, "description", e.target.value)
               }
               rows={3}

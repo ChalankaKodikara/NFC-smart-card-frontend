@@ -19,22 +19,27 @@ type Props = {
 export default function ExperienceSection({ slug }: Props) {
   const [experiences, setExperiences] = useState<Experience[]>([]);
 
+  /* ================= CLOUDINARY OPTIMIZER ================= */
+  const optimizeLogo = (url?: string) => {
+    if (!url) return "";
+    return url.replace("/upload/", "/upload/w_150,h_150,c_fill,q_auto,f_auto/");
+  };
+
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/public/${slug}`,
         );
+
         const json = await res.json();
 
         if (json.success) {
           const sorted = (json.data?.experiences || []).sort(
             (a: Experience, b: Experience) => {
-              // Current job always first
               if (a.isCurrent && !b.isCurrent) return -1;
               if (!a.isCurrent && b.isCurrent) return 1;
 
-              // Otherwise sort by startDate descending
               return (
                 new Date(b.startDate).getTime() -
                 new Date(a.startDate).getTime()
@@ -55,10 +60,9 @@ export default function ExperienceSection({ slug }: Props) {
   if (!experiences.length) return null;
 
   return (
-    <div className="w-full px-6 mt-10">
-      <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_20px_60px_rgba(0,0,0,0.08)] rounded-[28px] p-8 md:p-12">
-        {/* Section Title */}
-        <div className="text-center mb-12">
+    <section className="px-6 mt-20">
+      <div className="max-w-6xl mx-auto bg-white rounded-[28px] p-10 shadow-xl">
+        <div className="text-center mb-14">
           <p className="text-sm text-gray-400 uppercase tracking-wide">
             Professional
           </p>
@@ -67,87 +71,40 @@ export default function ExperienceSection({ slug }: Props) {
           </h2>
         </div>
 
-        {/* ================= MOBILE TIMELINE ================= */}
-        <div className="md:hidden relative border-l border-gray-200 pl-6 space-y-10">
+        <div className="relative border-l border-gray-200 pl-8 space-y-12">
           {experiences.map((exp, index) => (
             <div key={index} className="relative">
-              {/* Dot */}
-              <div className="absolute -left-[9px] top-2 w-3 h-3 bg-yellow-500 rounded-full border-4 border-white shadow-md" />
+              {/* Timeline Dot */}
+              <div className="absolute -left-[10px] top-3 w-4 h-4 bg-yellow-500 rounded-full border-4 border-white shadow-md" />
 
-              <h3 className="font-semibold text-gray-900">{exp.company}</h3>
-              <p className="text-sm text-gray-500 mb-2">
-                {exp.startDate} — {exp.isCurrent ? "Present" : exp.endDate}
-              </p>
+              <div className="flex items-start gap-4">
+                {exp.logo && (
+                  <img
+                    src={optimizeLogo(exp.logo)}
+                    alt={exp.company}
+                    className="w-14 h-14 rounded-lg object-cover shadow-md"
+                  />
+                )}
 
-              <h4 className="font-medium text-gray-800">{exp.position}</h4>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{exp.company}</h3>
+                  <p className="text-sm text-gray-500">
+                    {exp.startDate} — {exp.isCurrent ? "Present" : exp.endDate}
+                  </p>
 
-              <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                {exp.description}
-              </p>
+                  <h4 className="font-medium text-gray-800 mt-2">
+                    {exp.position}
+                  </h4>
+
+                  <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                    {exp.description}
+                  </p>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-
-        {/* ================= DESKTOP TIMELINE ================= */}
-        <div className="hidden md:block relative">
-          {/* Center Vertical Line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-200 -translate-x-1/2" />
-
-          <div className="space-y-16">
-            {experiences.map((exp, index) => {
-              const isLeft = index % 2 === 0;
-
-              return (
-                <div
-                  key={index}
-                  className="relative grid grid-cols-2 gap-12 items-start"
-                >
-                  {/* LEFT COLUMN */}
-                  <div className={isLeft ? "text-right pr-10" : ""}>
-                    {isLeft && (
-                      <>
-                        <h3 className="font-semibold text-gray-900">
-                          {exp.company}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {exp.startDate} —{" "}
-                          {exp.isCurrent ? "Present" : exp.endDate}
-                        </p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* DOT */}
-                  <div className="absolute left-1/2 top-2 -translate-x-1/2 w-4 h-4 bg-yellow-500 rounded-full border-4 border-white shadow-md" />
-
-                  {/* RIGHT COLUMN */}
-                  <div className={!isLeft ? "pl-10" : ""}>
-                    {!isLeft && (
-                      <>
-                        <h3 className="font-semibold text-gray-900">
-                          {exp.company}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {exp.startDate} —{" "}
-                          {exp.isCurrent ? "Present" : exp.endDate}
-                        </p>
-                      </>
-                    )}
-
-                    <h4 className="font-medium text-gray-800 mt-4">
-                      {exp.position}
-                    </h4>
-
-                    <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                      {exp.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
-    </div>
+    </section>
   );
 }
