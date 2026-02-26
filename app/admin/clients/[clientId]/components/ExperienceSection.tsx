@@ -20,16 +20,16 @@ type Props = {
   clientId: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = process.env.NEXT_PUBLIC_API_URL as string;
 
 export default function ExperienceSection({ clientId }: Props) {
   const [items, setItems] = useState<Experience[]>([]);
   const [originalItems, setOriginalItems] = useState<Experience[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [editMode, setEditMode] = useState<boolean>(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
 
   /* ================= FETCH ================= */
 
@@ -38,9 +38,11 @@ export default function ExperienceSection({ clientId }: Props) {
     fetchData();
   }, [clientId]);
 
-  const fetchData = async () => {
+  const fetchData = async (): Promise<void> => {
     try {
       setLoading(true);
+      setError("");
+
       const res = await apiRequest(`/api/client/experience/${clientId}`);
       const json = await res.json();
 
@@ -59,9 +61,9 @@ export default function ExperienceSection({ clientId }: Props) {
 
   /* ================= CRUD ================= */
 
-  const handleAdd = () => {
-    setItems([
-      ...items,
+  const handleAdd = (): void => {
+    setItems((prev) => [
+      ...prev,
       {
         position: "",
         company: "",
@@ -74,31 +76,43 @@ export default function ExperienceSection({ clientId }: Props) {
     ]);
   };
 
-  const handleChange = (index: number, field: keyof Experience, value: any) => {
-    const updated = [...items];
-    updated[index][field] = value;
+  const handleChange = <K extends keyof Experience>(
+    index: number,
+    field: K,
+    value: Experience[K],
+  ): void => {
+    setItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
 
-    if (field === "isCurrent" && value === true) {
-      updated[index].endDate = "";
-    }
+      if (field === "isCurrent" && value === true) {
+        updated[index].endDate = "";
+      }
 
-    setItems(updated);
+      return updated;
+    });
   };
 
-  const handleRemove = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
+  const handleRemove = (index: number): void => {
+    setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   /* ================= LOGO UPLOAD ================= */
 
-  const handleLogoUpload = async (index: number, file: File | null) => {
+  const handleLogoUpload = async (
+    index: number,
+    file: File | null,
+  ): Promise<void> => {
     if (!file || !clientId) return;
 
     const previewUrl = URL.createObjectURL(file);
 
-    const temp = [...items];
-    temp[index].logo = previewUrl;
-    setItems(temp);
+    setItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], logo: previewUrl };
+      return updated;
+    });
+
     setUploadingIndex(index);
 
     try {
@@ -124,15 +138,22 @@ export default function ExperienceSection({ clientId }: Props) {
         throw new Error("Upload failed");
       }
 
-      const updated = [...temp];
-      updated[index].logo = `${API}${json.url}?t=${Date.now()}`;
-      setItems(updated);
+      setItems((prev) => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          logo: `${API}${json.url}?t=${Date.now()}`,
+        };
+        return updated;
+      });
     } catch {
       setError("Logo upload failed");
 
-      const revert = [...items];
-      revert[index].logo = "";
-      setItems(revert);
+      setItems((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], logo: "" };
+        return updated;
+      });
     } finally {
       setUploadingIndex(null);
     }
@@ -140,7 +161,7 @@ export default function ExperienceSection({ clientId }: Props) {
 
   /* ================= SAVE ================= */
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     if (!clientId) return;
 
     try {
@@ -176,7 +197,7 @@ export default function ExperienceSection({ clientId }: Props) {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     setItems(originalItems);
     setEditMode(false);
   };
@@ -259,7 +280,7 @@ export default function ExperienceSection({ clientId }: Props) {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleLogoUpload(index, e.target.files?.[0] || null)
                     }
                     className="text-black"
@@ -279,18 +300,22 @@ export default function ExperienceSection({ clientId }: Props) {
             <input
               disabled={!editMode}
               value={exp.position}
-              onChange={(e) => handleChange(index, "position", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleChange(index, "position", e.target.value)
+              }
               placeholder="Position"
-              className="w-full border border-black px-3 py-2 rounded-lg text-black placeholder:text-black placeholder:opacity-60 disabled:text-black"
+              className="w-full border border-black px-3 py-2 rounded-lg text-black"
             />
 
             {/* Company */}
             <input
               disabled={!editMode}
               value={exp.company}
-              onChange={(e) => handleChange(index, "company", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleChange(index, "company", e.target.value)
+              }
               placeholder="Company Name"
-              className="w-full border border-black px-3 py-2 rounded-lg text-black placeholder:text-black placeholder:opacity-60 disabled:text-black"
+              className="w-full border border-black px-3 py-2 rounded-lg text-black"
             />
 
             {/* Dates */}
@@ -299,10 +324,10 @@ export default function ExperienceSection({ clientId }: Props) {
                 type="month"
                 disabled={!editMode}
                 value={exp.startDate}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleChange(index, "startDate", e.target.value)
                 }
-                className="border border-black px-3 py-2 rounded-lg text-black disabled:text-black"
+                className="border border-black px-3 py-2 rounded-lg text-black"
               />
 
               {!exp.isCurrent && (
@@ -310,10 +335,10 @@ export default function ExperienceSection({ clientId }: Props) {
                   type="month"
                   disabled={!editMode}
                   value={exp.endDate}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleChange(index, "endDate", e.target.value)
                   }
-                  className="border border-black px-3 py-2 rounded-lg text-black disabled:text-black"
+                  className="border border-black px-3 py-2 rounded-lg text-black"
                 />
               )}
             </div>
@@ -324,7 +349,7 @@ export default function ExperienceSection({ clientId }: Props) {
                 type="checkbox"
                 disabled={!editMode}
                 checked={exp.isCurrent}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleChange(index, "isCurrent", e.target.checked)
                 }
               />
@@ -335,12 +360,12 @@ export default function ExperienceSection({ clientId }: Props) {
             <textarea
               disabled={!editMode}
               value={exp.description}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 handleChange(index, "description", e.target.value)
               }
               rows={3}
               placeholder="Description"
-              className="w-full border border-black px-3 py-2 rounded-lg resize-none text-black placeholder:text-black placeholder:opacity-60 disabled:text-black"
+              className="w-full border border-black px-3 py-2 rounded-lg resize-none text-black"
             />
           </div>
         ))}
