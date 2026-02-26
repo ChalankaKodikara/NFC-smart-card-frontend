@@ -43,13 +43,7 @@ export default function CustomSection({
   const [saving, setSaving] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
-  const [original, setOriginal] = useState<CustomSectionType>({
-    id: initialId,
-    title: section?.title || "",
-    subtitle: section?.subtitle || "",
-    description: section?.description || "",
-    images: section?.images || [],
-  });
+  const [original, setOriginal] = useState<CustomSectionType>(data);
 
   useEffect(() => {
     if (!section) return;
@@ -70,26 +64,27 @@ export default function CustomSection({
   /* ================= SAVE ================= */
 
   const handleSave = async () => {
+    if (!clientId) return;
+
+    if (!data.title.trim()) {
+      alert("Section title is required");
+      return;
+    }
+
     try {
-      if (!clientId) return;
-
-      if (!data.title.trim()) {
-        alert("Section title is required");
-        return;
-      }
-
       setSaving(true);
 
-      const res = await apiRequest(`/api/client/custom/${clientId}/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          id: data.id,
-          title: data.title.trim(),
-          subtitle: (data.subtitle || "").trim(),
-          description: data.description || "",
-          images: data.images || [],
-        }),
-      });
+      const res = await apiRequest(
+        `/api/client/custom/${clientId}/${data.id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            ...data,
+            title: data.title.trim(),
+            subtitle: (data.subtitle || "").trim(),
+          }),
+        },
+      );
 
       const json = await res.json();
       if (!json.success) throw new Error(json.message);
@@ -107,13 +102,13 @@ export default function CustomSection({
 
   const handleDelete = async () => {
     if (!clientId) return;
-
     if (!confirm("Delete this section?")) return;
 
     try {
-      const res = await apiRequest(`/api/client/custom/${clientId}/${data.id}`, {
-        method: "DELETE",
-      });
+      const res = await apiRequest(
+        `/api/client/custom/${clientId}/${data.id}`,
+        { method: "DELETE" },
+      );
 
       const json = await res.json();
       if (!json.success) throw new Error(json.message);
@@ -144,6 +139,7 @@ export default function CustomSection({
       ...prev,
       images: [...prev.images, previewUrl],
     }));
+
     setUploadingIndex(previewIndex);
 
     const formData = new FormData();
@@ -152,10 +148,7 @@ export default function CustomSection({
     try {
       const res = await apiRequest(
         `/api/client/custom/image/${clientId}/${data.id}`,
-        {
-          method: "POST",
-          body: formData,
-        },
+        { method: "POST", body: formData },
       );
 
       const json = await res.json();
@@ -201,6 +194,7 @@ export default function CustomSection({
             >
               Cancel
             </button>
+
             <button
               onClick={handleSave}
               disabled={saving}
@@ -208,6 +202,7 @@ export default function CustomSection({
             >
               {saving ? "Saving..." : "Save"}
             </button>
+
             <button onClick={handleDelete}>
               <Trash2 size={18} className="text-red-500" />
             </button>
@@ -227,29 +222,25 @@ export default function CustomSection({
         disabled={!editMode}
         label="Section Title"
         value={data.title}
-        onChange={(v) => setData((prev) => ({ ...prev, title: v }))}
+        onChange={(value) => setData((prev) => ({ ...prev, title: value }))}
       />
 
       <ModernInput
         disabled={!editMode}
         label="Subtitle"
         value={data.subtitle || ""}
-        onChange={(v) => setData((prev) => ({ ...prev, subtitle: v }))}
+        onChange={(value) => setData((prev) => ({ ...prev, subtitle: value }))}
       />
 
       <ModernTextarea
         disabled={!editMode}
         label="Description"
         value={data.description}
-        onChange={(v) =>
-          setData((prev) => ({
-            ...prev,
-            description: v,
-          }))
+        onChange={(value) =>
+          setData((prev) => ({ ...prev, description: value }))
         }
       />
 
-      {/* Images */}
       {data.images.length > 0 && (
         <div className="grid grid-cols-2 gap-3">
           {data.images.map((img, index) => (
@@ -257,7 +248,11 @@ export default function CustomSection({
               key={index}
               className="relative rounded-xl overflow-hidden border"
             >
-              <img src={img} className="w-full h-28 object-cover" />
+              <img
+                src={img}
+                className="w-full h-28 object-cover"
+                alt="section"
+              />
               {editMode && (
                 <button
                   onClick={() => removeImage(index)}
@@ -289,21 +284,42 @@ export default function CustomSection({
 
 /* ================= UI ================= */
 
-function ModernInput({ label, value, onChange, disabled }: any) {
+type ModernInputProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+};
+
+function ModernInput({ label, value, onChange, disabled }: ModernInputProps) {
   return (
     <div>
       <label className="block mb-2 text-sm font-medium">{label}</label>
       <input
         disabled={disabled}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange(e.target.value)
+        }
         className="w-full border px-4 py-3 rounded-xl"
       />
     </div>
   );
 }
 
-function ModernTextarea({ label, value, onChange, disabled }: any) {
+type ModernTextareaProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+};
+
+function ModernTextarea({
+  label,
+  value,
+  onChange,
+  disabled,
+}: ModernTextareaProps) {
   return (
     <div>
       <label className="block mb-2 text-sm font-medium">{label}</label>
@@ -311,7 +327,9 @@ function ModernTextarea({ label, value, onChange, disabled }: any) {
         disabled={disabled}
         rows={4}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+          onChange(e.target.value)
+        }
         className="w-full border px-4 py-3 rounded-xl resize-none"
       />
     </div>
