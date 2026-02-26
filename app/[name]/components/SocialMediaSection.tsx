@@ -21,7 +21,7 @@ type Props = {
 export default function SocialMediaSection({ links }: Props) {
   if (!links || links.length === 0) return null;
 
-  const iconMap: Record<string, JSX.Element> = {
+  const iconMap: Record<string, React.ReactNode> = {
     linkedin: <FaLinkedinIn />,
     github: <FaGithub />,
     instagram: <FaInstagram />,
@@ -41,7 +41,6 @@ export default function SocialMediaSection({ links }: Props) {
 
   return (
     <div className="w-full mt-4">
-
       {/* ================= MOBILE ================= */}
       <div className="md:hidden px-6">
         <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_20px_60px_rgba(0,0,0,0.08)] rounded-[28px] p-6 space-y-4">
@@ -89,7 +88,6 @@ export default function SocialMediaSection({ links }: Props) {
           ))}
         </div>
       </div>
-
     </div>
   );
 }
