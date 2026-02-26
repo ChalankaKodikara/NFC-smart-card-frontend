@@ -30,10 +30,9 @@ async function getProfile(slug: string) {
 export default async function PublicProfile({
   params,
 }: {
-  params: Promise<{ name: string }>;
+  params: { name: string };
 }) {
-  // 🔥 MUST unwrap in Next 16
-  const { name } = await params;
+  const { name } = params; // ✅ NO await
 
   const profile = await getProfile(name);
 
@@ -43,7 +42,6 @@ export default async function PublicProfile({
 
   return (
     <div className="relative min-h-screen bg-[#ffffff] overflow-hidden">
-      {/* Animated Background */}
       <AnimatedBackground />
 
       <div className="relative z-10">
@@ -53,7 +51,7 @@ export default async function PublicProfile({
           bio={profile.personal?.bio ?? ""}
           profileImage={
             profile.personal?.profileImage
-              ? `http://localhost:5000${profile.personal.profileImage}`
+              ? `${process.env.NEXT_PUBLIC_API_URL}${profile.personal.profileImage}`
               : undefined
           }
         />
@@ -66,8 +64,8 @@ export default async function PublicProfile({
 
         <ExperienceSection slug={name} />
         <ContactSection slug={name} />
-                <Footer />
-        
+
+        <Footer />
       </div>
     </div>
   );
