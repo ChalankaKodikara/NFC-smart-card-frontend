@@ -15,30 +15,37 @@ type SocialLink = {
 };
 
 type PersonalProps = {
-  name: string;
-  slogan: string;
-  bio: string;
+  name?: string;
+  slogan?: string;
+  bio?: string;
   profileImage?: string;
   socialLinks?: SocialLink[];
 };
 
 export default function PersonalSection({
-  name,
-  slogan,
-  bio,
+  name = "",
+  slogan = "",
+  bio = "",
   profileImage,
   socialLinks = [],
 }: PersonalProps) {
   const firstName = name?.split(" ")[0] || "";
 
-  /* ================= CLOUDINARY OPTIMIZER ================= */
-  const optimizeImage = (url?: string) => {
-    if (!url) return "/placeholder.jpg";
+  /* ================= SAFE CLOUDINARY OPTIMIZER ================= */
+  const getOptimizedImage = (url?: string) => {
+    if (!url) return null;
 
-    return url.replace("/upload/", "/upload/w_700,h_700,c_fill,q_auto,f_auto/");
+    if (url.includes("cloudinary.com")) {
+      return url.replace(
+        "/upload/",
+        "/upload/w_700,h_700,c_fill,q_auto,f_auto/"
+      );
+    }
+
+    return url;
   };
 
-  const optimizedImage = optimizeImage(profileImage);
+  const optimizedImage = getOptimizedImage(profileImage);
 
   /* ================= ICON MATCHER ================= */
   const getIcon = (platform: string) => {
@@ -57,11 +64,14 @@ export default function PersonalSection({
   return (
     <section className="pt-16 pb-24 px-6 md:px-12">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-        {/* LEFT SIDE */}
+        {/* ================= LEFT SIDE ================= */}
         <div className="space-y-8">
+          {/* Header */}
           <div className="flex items-center gap-4 text-gray-600">
             <span className="w-3 h-3 rounded-full bg-black" />
-            <span className="font-medium text-lg">{name}</span>
+            <span className="font-medium text-lg">
+              {name || "Your Name"}
+            </span>
 
             <div className="flex items-center gap-2 text-green-600 ml-6">
               <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
@@ -71,23 +81,39 @@ export default function PersonalSection({
 
           {/* Small Profile Card */}
           <div className="flex items-center gap-4">
-            <img
-              src={optimizedImage}
-              alt={name}
-              className="w-[75px] h-[75px] rounded-full object-cover shadow-lg"
-            />
+            {optimizedImage ? (
+              <img
+                src={optimizedImage}
+                alt={name}
+                className="w-[75px] h-[75px] rounded-full object-cover shadow-lg"
+              />
+            ) : (
+              <div className="w-[75px] h-[75px] rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                N/A
+              </div>
+            )}
+
             <div>
-              <h2 className="text-lg font-semibold text-black">{name}</h2>
-              <p className="text-gray-500 text-sm">{slogan}</p>
+              <h2 className="text-lg font-semibold text-black">
+                {name || "Your Name"}
+              </h2>
+              <p className="text-gray-500 text-sm">
+                {slogan || "Your slogan here"}
+              </p>
             </div>
           </div>
 
+          {/* Main Heading */}
           <h1 className="text-4xl md:text-5xl font-semibold text-gray-900">
-            Hi, I'm {firstName}
+            Hi, I'm {firstName || "You"}
           </h1>
 
-          <p className="text-gray-600 leading-relaxed max-w-xl">{bio}</p>
+          {/* Bio */}
+          <p className="text-gray-600 leading-relaxed max-w-xl">
+            {bio || "Add your bio from admin panel."}
+          </p>
 
+          {/* Social Links */}
           {socialLinks.length > 0 && (
             <div className="flex gap-4 pt-6">
               {socialLinks.map((item, index) => {
@@ -110,13 +136,19 @@ export default function PersonalSection({
           )}
         </div>
 
-        {/* RIGHT SIDE IMAGE */}
+        {/* ================= RIGHT SIDE IMAGE ================= */}
         <div className="rounded-[32px] overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.15)]">
-          <img
-            src={optimizedImage}
-            alt={name}
-            className="w-full h-[450px] md:h-[600px] object-cover"
-          />
+          {optimizedImage ? (
+            <img
+              src={optimizedImage}
+              alt={name}
+              className="w-full h-[450px] md:h-[600px] object-cover"
+            />
+          ) : (
+            <div className="w-full h-[450px] md:h-[600px] bg-gray-100 flex items-center justify-center text-gray-400">
+              No Profile Image
+            </div>
+          )}
         </div>
       </div>
     </section>

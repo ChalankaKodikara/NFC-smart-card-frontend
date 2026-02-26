@@ -32,7 +32,6 @@ export default async function PublicProfile({
 }: {
   params: Promise<{ name: string }>;
 }) {
-  // 🔥 MUST unwrap in Next 16
   const { name } = await params;
 
   const profile = await getProfile(name);
@@ -43,7 +42,6 @@ export default async function PublicProfile({
 
   return (
     <div className="relative min-h-screen bg-[#ffffff] overflow-hidden">
-      {/* Animated Background */}
       <AnimatedBackground />
 
       <div className="relative z-10">
@@ -51,11 +49,8 @@ export default async function PublicProfile({
           name={profile.personal?.name ?? ""}
           slogan={profile.personal?.slogan ?? ""}
           bio={profile.personal?.bio ?? ""}
-          profileImage={
-            profile.personal?.profileImage
-              ? `http://localhost:5000${profile.personal.profileImage}`
-              : undefined
-          }
+          profileImage={profile.personal?.profileImage ?? undefined}
+          socialLinks={profile.social?.links ?? []}
         />
 
         {profile.social?.links?.length > 0 && (
@@ -66,8 +61,7 @@ export default async function PublicProfile({
 
         <ExperienceSection slug={name} />
         <ContactSection slug={name} />
-                <Footer />
-        
+        <Footer />
       </div>
     </div>
   );
