@@ -42,42 +42,22 @@ export default function ProfileBuilder() {
         </div>
 
         {/* PERSONAL */}
-        <SortableWrapper>
+        <SortableWrapper id="personal">
           <PersonalSection clientId={clientId} />
         </SortableWrapper>
 
         {/* SOCIAL */}
-        <SortableWrapper>
+        <SortableWrapper id="social">
           <SocialSection clientId={clientId} />
         </SortableWrapper>
 
         {/* EXPERIENCE */}
-        <SortableWrapper>
+        <SortableWrapper id="experience">
           <ExperienceSection clientId={clientId} />
         </SortableWrapper>
 
-        {/* CUSTOM SECTIONS */}
-        {/* {customSections.map((section) => (
-          <SortableWrapper key={section.id}>
-            <CustomSection
-              clientId={clientId}
-              section={section}
-              onDeleted={() => removeCustomSection(section.id)}
-            />
-          </SortableWrapper>
-        ))} */}
-
-        {/* ADD CUSTOM SECTION */}
-        {/* <button
-          onClick={addCustomSection}
-          className="w-full bg-white border border-dashed border-gray-300 py-4 rounded-xl flex items-center justify-center gap-2 text-gray-600 hover:bg-gray-100 transition"
-        >
-          <Plus size={18} />
-          Add Custom Section
-        </button> */}
-
         {/* CONTACT */}
-        <SortableWrapper>
+        <SortableWrapper id="contact">
           <ContactSection clientId={clientId} />
         </SortableWrapper>
       </div>
