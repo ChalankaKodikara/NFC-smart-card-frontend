@@ -16,10 +16,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  /* =====================================
-     🔐 LOGIN HANDLER
-  ===================================== */
-
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
       setError("Username and password are required");
@@ -30,16 +26,13 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
-      // 🧹 Clear old session
       Cookies.remove("token");
       Cookies.remove("user");
       localStorage.clear();
 
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
           password: password.trim(),
@@ -48,61 +41,24 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed");
-      }
+      if (!res.ok) throw new Error(data.message || "Login failed");
 
       const { token, user } = data;
-      const { role, tenantId, tenantSlug } = user;
+      const { role, tenantId } = user;
 
-      /* =====================================
-         ✅ SAVE SESSION
-      ===================================== */
+      Cookies.set("token", token, { expires: 1 });
+      Cookies.set("user", JSON.stringify(user), { expires: 1 });
 
-      // Save token in cookie
-      Cookies.set("token", token, {
-        expires: 1,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
-      });
-
-      // Save user in cookie
-      Cookies.set("user", JSON.stringify(user), {
-        expires: 1,
-      });
-
-      // Save useful values in localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
-      if (tenantId) {
-        localStorage.setItem("tenantId", tenantId);
-      }
-
-      if (tenantSlug) {
-        localStorage.setItem("tenantSlug", tenantSlug);
-      }
-
-      /* =====================================
-         🚀 ROLE BASED ROUTING
-      ===================================== */
-
       if (role === "SUPER_ADMIN") {
         router.push("/super/dashboard");
-        return;
-      }
-
-      if (role === "CLIENT_ADMIN") {
-        if (!tenantId) {
-          throw new Error("Tenant ID missing");
-        }
-
+      } else if (role === "CLIENT_ADMIN") {
         router.push(`/admin/clients/${tenantId}`);
-        return;
+      } else {
+        router.push("/");
       }
-
-      // fallback
-      router.push("/");
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -110,61 +66,87 @@ export default function LoginPage() {
     }
   };
 
-  /* =====================================
-     ⌨️ ENTER KEY SUPPORT
-  ===================================== */
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !loading) {
-      handleLogin();
-    }
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-6">
-      <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-xl border border-gray-200">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-black">
-            Casknet Admin Portal
-          </h2>
-          <p className="text-gray-500 mt-2 text-sm">
-            NFC Digital Business Card System
+    <div className="min-h-screen grid md:grid-cols-2">
+      {/* ================= LEFT LOGIN SIDE ================= */}
+      <div className="flex items-center justify-center bg-white px-8 py-16">
+        <div className="w-full max-w-md">
+          <h2 className="text-4xl font-bold text-black mb-4">Sign In</h2>
+
+          <p className="text-gray-500 mb-8">
+            Use the username and password provided in your welcome letter.
           </p>
+
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={loading}
+            className="w-full border border-gray-300 p-4 rounded-xl mb-4 text-black focus:ring-2 focus:ring-[#FACC15] outline-none"
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+            className="w-full border border-gray-300 p-4 rounded-xl mb-4 text-black focus:ring-2 focus:ring-[#FACC15] outline-none"
+          />
+
+          {error && <div className="mb-4 text-sm text-red-500">{error}</div>}
+
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-[#FACC15] text-black py-4 rounded-xl font-semibold hover:bg-yellow-400 transition flex items-center justify-center gap-2"
+          >
+            {loading ? "Signing in..." : "Sign In"}
+            <ArrowRight className="w-5 h-5" />
+          </button>
         </div>
-
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={loading}
-          className="w-full border border-gray-300 p-4 rounded-xl mb-4 text-black focus:ring-2 focus:ring-black outline-none transition disabled:opacity-60"
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={loading}
-          className="w-full border border-gray-300 p-4 rounded-xl mb-4 text-black focus:ring-2 focus:ring-black outline-none transition disabled:opacity-60"
-        />
-
-        {error && (
-          <div className="mb-4 text-sm text-red-500 text-center">{error}</div>
-        )}
-
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="w-full bg-black text-white py-4 rounded-xl font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 disabled:opacity-60"
-        >
-          {loading ? "Logging in..." : "Login"}
-          <ArrowRight className="w-5 h-5" />
-        </button>
       </div>
+
+      {/* ================= RIGHT BRAND SIDE ================= */}
+      <div className="hidden md:flex flex-col justify-center items-center bg-black text-white px-16 relative overflow-hidden">
+        {/* Soft Yellow Glow */}
+        <div className="absolute w-96 h-96 bg-[#FACC15]/20 rounded-full blur-3xl top-10 right-10"></div>
+
+        <div className="relative z-10 max-w-md text-left">
+          <h3 className="text-[#FACC15] uppercase text-sm font-semibold mb-4">
+            Casknet NFC Solution
+          </h3>
+
+          <h1 className="text-4xl font-bold mb-6">
+            Manage Your Digital Business Card
+          </h1>
+
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Access your admin dashboard to update your profile, manage social
+            links, customize sections and monitor your digital networking
+            performance.
+          </p>
+
+          <div className="space-y-4 text-gray-300">
+            <Feature text="Update portfolio anytime" />
+            <Feature text="Add social media links" />
+            <Feature text="Edit experience & contact info" />
+            <Feature text="Track profile engagement" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= FEATURE ITEM ================= */
+
+function Feature({ text }: { text: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-[#FACC15]">✔</span>
+      <span>{text}</span>
     </div>
   );
 }
