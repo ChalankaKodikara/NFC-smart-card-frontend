@@ -2,8 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import HeroSection from "@/components/HeroSection";
+import ProductSection from "@/components/ProductSection";
 import FeaturesSection from "@/components/FeaturesSection";
+import PricingSection from "@/components/PricingSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
+import FAQSection from "@/components/FAQSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
@@ -13,8 +16,14 @@ export default function Home() {
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
     const dots = Array.from({ length: 60 }).map(() => ({
       x: Math.random() * canvas.width,
@@ -45,6 +54,10 @@ export default function Home() {
     }
 
     animate();
+
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+    };
   }, []);
 
   return (
@@ -53,8 +66,11 @@ export default function Home() {
 
       <div className="relative z-10">
         <HeroSection />
+        <ProductSection />
         <FeaturesSection />
+        <PricingSection />
         <HowItWorksSection />
+        <FAQSection />
         <CTASection />
         <Footer />
       </div>

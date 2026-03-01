@@ -53,11 +53,11 @@ export default async function PublicProfile({
           socialLinks={profile.social?.links ?? []}
         />
 
-        {profile.social?.links?.length > 0 && (
+        {/* {profile.social?.links?.length > 0 && (
           <div className="mt-4">
             <SocialMediaSection links={profile.social.links} />
           </div>
-        )}
+        )} */}
 
         <ExperienceSection slug={name} />
         <ContactSection slug={name} />
