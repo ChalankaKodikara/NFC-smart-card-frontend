@@ -40,7 +40,6 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Login failed");
 
       const { token, user } = data;
@@ -68,12 +67,43 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid md:grid-cols-2">
-      {/* ================= LEFT LOGIN SIDE ================= */}
+      {/* ================= BRAND SIDE ================= */}
+      <div className="relative flex flex-col justify-center items-center bg-black text-white px-8 py-16 overflow-hidden">
+        {/* Glow */}
+        <div className="absolute w-80 h-80 bg-[#FACC15]/20 rounded-full blur-3xl top-10 right-10"></div>
+
+        <div className="relative z-10 max-w-md text-center md:text-left">
+          <h3 className="text-[#FACC15] uppercase text-xs font-semibold mb-4 tracking-widest">
+            Casknet NFC Solution
+          </h3>
+
+          <h1 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
+            Manage Your Digital Business Card
+          </h1>
+
+          <p className="text-gray-400 mb-8 text-sm md:text-base leading-relaxed">
+            Access your dashboard to update profile details, manage social links
+            and control your digital networking experience.
+          </p>
+
+          {/* Hide feature list on small screens */}
+          <div className="hidden md:block space-y-4 text-gray-300">
+            <Feature text="Update portfolio anytime" />
+            <Feature text="Add social media links" />
+            <Feature text="Edit experience & contact info" />
+            <Feature text="Track profile engagement" />
+          </div>
+        </div>
+      </div>
+
+      {/* ================= LOGIN SIDE ================= */}
       <div className="flex items-center justify-center bg-white px-8 py-16">
         <div className="w-full max-w-md">
-          <h2 className="text-4xl font-bold text-black mb-4">Sign In</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
+            Sign In
+          </h2>
 
-          <p className="text-gray-500 mb-8">
+          <p className="text-gray-500 mb-8 text-sm">
             Use the username and password provided in your welcome letter.
           </p>
 
@@ -105,35 +135,6 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign In"}
             <ArrowRight className="w-5 h-5" />
           </button>
-        </div>
-      </div>
-
-      {/* ================= RIGHT BRAND SIDE ================= */}
-      <div className="hidden md:flex flex-col justify-center items-center bg-black text-white px-16 relative overflow-hidden">
-        {/* Soft Yellow Glow */}
-        <div className="absolute w-96 h-96 bg-[#FACC15]/20 rounded-full blur-3xl top-10 right-10"></div>
-
-        <div className="relative z-10 max-w-md text-left">
-          <h3 className="text-[#FACC15] uppercase text-sm font-semibold mb-4">
-            Casknet NFC Solution
-          </h3>
-
-          <h1 className="text-4xl font-bold mb-6">
-            Manage Your Digital Business Card
-          </h1>
-
-          <p className="text-gray-400 mb-8 leading-relaxed">
-            Access your admin dashboard to update your profile, manage social
-            links, customize sections and monitor your digital networking
-            performance.
-          </p>
-
-          <div className="space-y-4 text-gray-300">
-            <Feature text="Update portfolio anytime" />
-            <Feature text="Add social media links" />
-            <Feature text="Edit experience & contact info" />
-            <Feature text="Track profile engagement" />
-          </div>
         </div>
       </div>
     </div>
