@@ -10,9 +10,9 @@ type Experience = {
   position: string;
   company: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   isCurrent: boolean;
-  description: string;
+  description?: string;
   logo?: string;
 };
 
@@ -32,12 +32,14 @@ export default function ExperienceSection({ clientId }: Props) {
   const [error, setError] = useState("");
 
   /* ================= OPTIMIZE CLOUDINARY IMAGE ================= */
+
   const optimizeImage = (url?: string) => {
     if (!url) return "";
     return url.replace("/upload/", "/upload/w_250,h_250,c_fill,q_auto,f_auto/");
   };
 
   /* ================= FETCH ================= */
+
   useEffect(() => {
     if (!clientId) return;
     fetchData();
@@ -64,7 +66,8 @@ export default function ExperienceSection({ clientId }: Props) {
     }
   };
 
-  /* ================= CRUD ================= */
+  /* ================= ADD ================= */
+
   const handleAdd = () => {
     setItems((prev) => [
       ...prev,
@@ -80,10 +83,16 @@ export default function ExperienceSection({ clientId }: Props) {
     ]);
   };
 
+  /* ================= CHANGE ================= */
+
   const handleChange = (index: number, field: keyof Experience, value: any) => {
     setItems((prev) => {
       const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
+
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
 
       if (field === "isCurrent" && value === true) {
         updated[index].endDate = "";
@@ -93,17 +102,19 @@ export default function ExperienceSection({ clientId }: Props) {
     });
   };
 
+  /* ================= REMOVE ================= */
+
   const handleRemove = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   /* ================= LOGO UPLOAD ================= */
+
   const handleLogoUpload = async (index: number, file: File | null) => {
     if (!file || !clientId) return;
 
     const previewUrl = URL.createObjectURL(file);
 
-    // Show preview immediately
     setItems((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], logo: previewUrl };
@@ -133,13 +144,14 @@ export default function ExperienceSection({ clientId }: Props) {
 
       if (!json.success) throw new Error("Upload failed");
 
-      // Replace preview with Cloudinary URL
       setItems((prev) => {
         const updated = [...prev];
+
         updated[index] = {
           ...updated[index],
           logo: json.url,
         };
+
         return updated;
       });
     } catch {
@@ -156,6 +168,7 @@ export default function ExperienceSection({ clientId }: Props) {
   };
 
   /* ================= SAVE ================= */
+
   const handleSave = async () => {
     if (!clientId) return;
 
@@ -164,7 +177,7 @@ export default function ExperienceSection({ clientId }: Props) {
       setError("");
 
       const filtered = items.filter(
-        (exp) => exp.position.trim() && exp.company.trim(),
+        (exp) => exp.position.trim() && exp.company.trim() && exp.startDate,
       );
 
       const res = await apiRequest(
@@ -190,12 +203,15 @@ export default function ExperienceSection({ clientId }: Props) {
     }
   };
 
+  /* ================= CANCEL ================= */
+
   const handleCancel = () => {
     setItems(originalItems);
     setEditMode(false);
   };
 
   /* ================= UI ================= */
+
   if (loading) {
     return (
       <div className="p-6 bg-white rounded-xl shadow text-black">
@@ -217,6 +233,7 @@ export default function ExperienceSection({ clientId }: Props) {
             >
               Cancel
             </button>
+
             <button
               onClick={handleSave}
               disabled={saving}
@@ -304,6 +321,45 @@ export default function ExperienceSection({ clientId }: Props) {
               placeholder="Company Name"
               className="w-full border border-black px-3 py-2 rounded-lg text-black"
             />
+
+            {/* DATES */}
+            <div className="flex gap-3">
+              <input
+                type="month"
+                disabled={!editMode}
+                value={exp.startDate}
+                onChange={(e) =>
+                  handleChange(index, "startDate", e.target.value)
+                }
+                className="w-full border border-black px-3 py-2 rounded-lg text-black"
+              />
+
+              {!exp.isCurrent && (
+                <input
+                  type="month"
+                  disabled={!editMode}
+                  value={exp.endDate || ""}
+                  onChange={(e) =>
+                    handleChange(index, "endDate", e.target.value)
+                  }
+                  className="w-full border border-black px-3 py-2 rounded-lg text-black"
+                />
+              )}
+            </div>
+
+            {/* CURRENT JOB */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                disabled={!editMode}
+                checked={exp.isCurrent}
+                onChange={(e) =>
+                  handleChange(index, "isCurrent", e.target.checked)
+                }
+              />
+
+              <span className="text-sm text-black">Currently working here</span>
+            </div>
 
             {/* DESCRIPTION */}
             <textarea
